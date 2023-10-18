@@ -1,10 +1,16 @@
-.section .data
-    # Isso tem que estar na BSS (Mudar depois)
-    brk_original: .quad 0
-    brk_current:  .quad 0
+.section .bss
+    .global brk_original
+    .global brk_current
+
+    .lcomm brk_original 8
+    .lcomm brk_current 8
     
 .section .text
-    # void setup_brk 
+    .global setup_brk
+    .global dismiss_brk
+    .global memory_alloc
+    .global memory_free
+
     setup_brk:
         pushq %rbp
         movq %rsp, %rbp
@@ -15,30 +21,30 @@
         syscall
 
         # brk_original = brk_current = BRK
-        movq %rax, brk_original
-        movq brk_original, brk_current
+        lea brk_original(%rip), %rcx
+        movq %rax, (%rcx)
+        movq %rax, 8(%rcx) 
 
         popq %rbp
         ret
 
-    # void dismiss_brk()
     dismiss_brk:
         pushq %rbp
         movq %rsp, %rbp
 
         # reseta  brk_current
-        movq brk_original, brk_current
+        lea brk_original(%rip), %rdi
+        movq (%rdi), %rcx
+        movq %rcx, 8(%rdi)
 
         # Atualiza BRK
-        movq brk_original, %rdi 
+        movq (%rdi), %rdi 
         movq $12, %rax
         syscall
         
         popq %rbp
         ret
-
-
-    # void* memory_alloc(unsigned long int bytes)
+/*
     memory_alloc:
         pushq %rbp
         movq %rsp, %rbp
@@ -138,13 +144,12 @@
         popq %rbp
         ret
 
-    # void memory free(void *pointer)
     memory_free:
         pushq %rbp
         movq %rsp, %rbp
 
         # pointer[-16] = 0 
-        movq $0, -16(%rdi), 
-
+        movq $0, -16(%rdi), brk_current
         popq %rbp
         ret
+*/
