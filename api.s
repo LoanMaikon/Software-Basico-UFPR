@@ -44,32 +44,32 @@
         
         popq %rbp
         ret
-/*
+
     memory_alloc:
         pushq %rbp
         movq %rsp, %rbp
 
-        ###### bytes em %rdi
-
         # Posição inicial da heap
-        movq brk_original, %rdx        ######## lea brk_original(%rip), %rdx
+        lea brk_original(%rip), %rcx
+        movq (%rcx), %rdx
 
         # Verifica se brk <= posição atual da heap
         _loop:
-        cmpq %rdx, brk_current
-        jle _valid_position     ######## jl _valid_position
-        # Se sim                                 ###### vai sempre cair nessa condição?
+        cmpq %rdx, 8(%rcx)
+        jl _valid_position
+        # Se sim
             # atualiza brk_current = brk_currentK + (bytes+16)
-            addq $16, brk_current
-            addq %rdi, brk_current
+
+            lea brk_current(%rip), %rax
+            # dá pra otimizar
+            addq $16, (%rax)
+            addq %rdi, (%rax)
 
             # Salva valor de bytes
             movq %rdi,%rcx 
 
-            ##### %rcx guarda bytes
-
             # Atualiza o BRK
-            movq brk_current, %rdi 
+            movq (%rax), %rdi
             movq $12, %rax
             syscall
 
@@ -86,9 +86,9 @@
         cmpq $0, (%rdx)
         je _livre
         # Se não está livre
-            # rdx aponta pro proximo          #### pro próximo o que?
-            addq 8, %rdx           ####### addq $8, %rdx
-            addq (%rdx), %rdx     ### que porra é essa
+            # rdx aponta pro proximo
+            addq $16, %rdx
+            addq -8(%rdx), %rdx
             
             # Repete
             jmp _loop
@@ -98,19 +98,19 @@
 
         # Verifica tamanho
             cmp 8(%rdx), %rdi
-            jl _insuficiente     ###### jge _insuficiente
+            jg _insuficiente
             # Se tamanho é suficiente
-                # Flag que está ocupado agora
+                # Colocando flag como ocupada
                 movq $1, (%rdx)
 
-                # Calcula quanto espaço esta sobrando - 16 - bytes
+                # Calcula quanto espaço esta sobrando - 16
                 movq 8(%rdx), %rcx
                 subq %rdi, %rcx
                 subq $16, %rcx
 
                 # Verifica se espaço em sobra permite outro registro
                 cmp $0, %rcx
-                jle _no_space      ########  jl _no_space
+                jle _no_space
                     # Se sobra o suficiente
 
                         # Modifica o valor do tamanho do atual
@@ -125,7 +125,7 @@
                         movq %rcx, 8(%rdx)
 
                         # Volta para o registro alocado
-                        subq 16, %rdx                  ##### subq $16, %rdx
+                        subq $16, %rdx
                         subq %rdi, %rdx
                         
                     _no_space:
@@ -133,14 +133,14 @@
             # Se tamanho não é suficiente
             _insuficiente:
 
-                # rdx aponta pro proximo      #### pro próximo o que?
-                addq 8, %rdx          #### addq $8, %rdx
-                addq (%rdx), %rdx
+                # rdx aponta pro proximo
+                addq $16, %rdx
+                addq -8(%rdx), %rdx
             
                 # Repete
                 jmp _loop
 
-        _end;
+        _end:
         # Retorna posição da area alocada (%rdx +16)
         addq $16, %rdx
         movq %rdx, %rax
@@ -153,7 +153,6 @@
         movq %rsp, %rbp
 
         # pointer[-16] = 0 
-        movq $0, -16(%rdi), brk_current
+        movq $0, -16(%rdi)
         popq %rbp
         ret
-*/
