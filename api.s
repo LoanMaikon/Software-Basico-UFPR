@@ -49,20 +49,24 @@
         pushq %rbp
         movq %rsp, %rbp
 
+        ###### bytes em %rdi
+
         # Posição inicial da heap
-        movq brk_original, %rdx
+        movq brk_original, %rdx        ######## lea brk_original(%rip), %rdx
 
         # Verifica se brk <= posição atual da heap
         _loop:
         cmpq %rdx, brk_current
-        jle _valid_position
-        # Se sim
+        jle _valid_position     ######## jl _valid_position
+        # Se sim                                 ###### vai sempre cair nessa condição?
             # atualiza brk_current = brk_currentK + (bytes+16)
             addq $16, brk_current
             addq %rdi, brk_current
 
             # Salva valor de bytes
             movq %rdi,%rcx 
+
+            ##### %rcx guarda bytes
 
             # Atualiza o BRK
             movq brk_current, %rdi 
@@ -82,9 +86,9 @@
         cmpq $0, (%rdx)
         je _livre
         # Se não está livre
-            # rdx aponta pro proximo
-            addq 8, %rdx
-            addq (%rdx), %rdx
+            # rdx aponta pro proximo          #### pro próximo o que?
+            addq 8, %rdx           ####### addq $8, %rdx
+            addq (%rdx), %rdx     ### que porra é essa
             
             # Repete
             jmp _loop
@@ -94,19 +98,19 @@
 
         # Verifica tamanho
             cmp 8(%rdx), %rdi
-            jl _insuficiente
+            jl _insuficiente     ###### jge _insuficiente
             # Se tamanho é suficiente
                 # Flag que está ocupado agora
                 movq $1, (%rdx)
 
-                # Calcula quando espaço esta sobrando - 16
+                # Calcula quanto espaço esta sobrando - 16 - bytes
                 movq 8(%rdx), %rcx
                 subq %rdi, %rcx
                 subq $16, %rcx
 
                 # Verifica se espaço em sobra permite outro registro
                 cmp $0, %rcx
-                jle _no_space
+                jle _no_space      ########  jl _no_space
                     # Se sobra o suficiente
 
                         # Modifica o valor do tamanho do atual
@@ -121,7 +125,7 @@
                         movq %rcx, 8(%rdx)
 
                         # Volta para o registro alocado
-                        subq 16, %rdx
+                        subq 16, %rdx                  ##### subq $16, %rdx
                         subq %rdi, %rdx
                         
                     _no_space:
@@ -129,8 +133,8 @@
             # Se tamanho não é suficiente
             _insuficiente:
 
-                # rdx aponta pro proximo
-                addq 8, %rdx
+                # rdx aponta pro proximo      #### pro próximo o que?
+                addq 8, %rdx          #### addq $8, %rdx
                 addq (%rdx), %rdx
             
                 # Repete
