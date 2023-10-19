@@ -66,16 +66,19 @@
             addq %rdi, (%rax)
 
             # Salva valor de bytes
-            movq %rdi,%rcx 
+            pushq %rdi
 
             # Atualiza o BRK
             movq (%rax), %rdi
             movq $12, %rax
             syscall
+            
+            # Carrega o valor dos bytes 
+            popq %rdi
 
             # Cria registro  
             movq $1, (%rdx)
-            movq %rcx, 8(%rdx)
+            movq %rdi, 8(%rdx)
   
             # FIM
             jmp _end
@@ -140,7 +143,8 @@
                 jmp _loop
 
         _end:
-        # Retorna posição da area alocada (%rdx +16)
+
+        # Retorna posição da area alocada 
         addq $16, %rdx
         movq %rdx, %rax
         
