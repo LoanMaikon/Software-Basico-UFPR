@@ -56,7 +56,7 @@
         # Verifica se brk <= posição atual da heap
         _loop:
         cmpq %rdx, 8(%rcx)
-        jl _valid_position
+        jg _valid_position
         # Se sim
             # atualiza brk_current = brk_currentK + (bytes+16)
 
@@ -95,13 +95,10 @@
 
         # Se está livre
         _livre:
-
         # Verifica tamanho
             cmp 8(%rdx), %rdi
             jg _insuficiente
             # Se tamanho é suficiente
-                # Colocando flag como ocupada
-                movq $1, (%rdx)
 
                 # Calcula quanto espaço esta sobrando - 16
                 movq 8(%rdx), %rcx
@@ -129,6 +126,8 @@
                         subq %rdi, %rdx
                         
                     _no_space:
+                    # Colocando flag como ocupada
+                    movq $1, (%rdx)
                     jmp _end
             # Se tamanho não é suficiente
             _insuficiente:
@@ -152,7 +151,8 @@
         pushq %rbp
         movq %rsp, %rbp
 
-        # pointer[-16] = 0 
-        movq $0, -16(%rdi)
+        # Marca flag como livre
+        movq $1, -16(%rdi)
+
         popq %rbp
         ret

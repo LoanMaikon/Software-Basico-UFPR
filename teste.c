@@ -16,7 +16,7 @@ void show_global(){
 }
 
 void header(char *str){
-    printf("## %s \n",str);
+    printf("\n\n######### %s #########\n",str);
 }
 
 void msg(char *str){
@@ -25,11 +25,11 @@ void msg(char *str){
 
 void teste_setup_brk(){
     header("Testando setup_brk");
-    header("Globais :: ");
+    msg("Globais :: ");
     show_global();
     msg("setup_brk()");
     setup_brk();
-    header("Globais :: ");
+    msg("Globais :: ");
     show_global();
 }
 
@@ -46,26 +46,77 @@ void teste_dismiss_brk(int valor_manual){
 }
 
 void teste_memory_alloc(){
-    msg("Inserindo o primeiro registro");
-    char *str[10];
-    for (int i = 10; i < 20; i++) {
-        str[i] = memory_alloc(i * sizeof(char));
-        for (int j = 0; j < i - 1; j++){
-            str[i][j] = 'a' + j;
-        }
-        str[i][i] = '\0';
-    }
-    msg("Imprimindo mensagem");
-    for (int i = 0; i < 10; i++)
-        printf("%s\n", str[i]);
-        show_global();
+    char *str_0, *str_1, *str_2, *str_3,*str_4;
+    header("Inserindo primeiro elemento na heap");
+    msg("Inserindo registro");
+    str_0 = memory_alloc( 5 * sizeof(char));
+    str_0[0] = 'T';
+    str_0[1] = 'A';
+    str_0[2] = 'T';
+    str_0[3] = 'U';
+    str_0[4] = '\0';
+    printf("%s\n",str_0);
+
+    header("Inserindo segundo elemento na heap");
+    /* Teste avanço na heap com vericação de _livre falso*/
+    str_1 = memory_alloc( 3 * sizeof(char));
+    str_1[0] = 'O';
+    str_1[1] = 'L';
+    str_1[2] = 'A';
+    str_1[3] = '\0';
+    printf("%s\n",str_1);
+    show_global();
+
+    header("Teste de reaproveitamento de memoria, sem novo registro");
+    msg("Inserindo elemento");
+    str_2 = memory_alloc( 40 * sizeof(char));
+    show_global();
+    printf("!! str_2 alocado na posição : %p\n", str_2);
+    //msg("memory_free()");
+    //memory_free(str_2);
+    str_2 = memory_alloc( 40 * sizeof(char));
+    printf("!! realocação de str_2: %p\n", str_2);
+    show_global();
+
+    header("Teste de reaproveitamento de memoria, com novo registro");
+    msg("Desalocando str_2");
+    memory_free(str_2);
+    msg("Alocando duas posições dentro da antiga de str_2");
+    str_3 = memory_alloc( 10 * sizeof(char));
+    str_4 = memory_alloc( 14 * sizeof(char));
+    printf("!! posição str_3  : %p\n", str_3);
+    printf("!! posição str_4  : %p\n", str_4);
+
+
+}
+
+void rapid_memory_alloc(){
+    char *str_0;
+    str_0 = memory_alloc( 40 * sizeof(char));
+    printf("!! Alocado em : %p\n", str_0);
+    show_global();
+    str_0 = memory_alloc( 40 * sizeof(char));
+    printf("!! Alocado em : %p\n", str_0);
+    
+    str_0 = memory_alloc( 40 * sizeof(char));
+    printf("!! Alocado em : %p\n", str_0);
+    
+    str_0 = memory_alloc( 40 * sizeof(char));
+    printf("!! Alocado em : %p\n", str_0);
+   
+    str_0 = memory_alloc( 40 * sizeof(char));
+    printf("!! Alocado em : %p\n", str_0);
+   
+    str_0 = memory_alloc( 40 * sizeof(char));
+    printf("!! Alocado em : %p\n", str_0);
+
 }
 
 int main(){
     teste_setup_brk();
 
-    teste_memory_alloc();
-
+    //teste_memory_alloc();
+    rapid_memory_alloc();
     teste_dismiss_brk(0);
 
     return 0;
