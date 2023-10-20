@@ -10,6 +10,20 @@
     .global dismiss_brk
     .global memory_alloc
     .global memory_free
+    .global get_brk
+    
+    # Função extra para retornar o brk
+    get_brk:
+        pushq %rbp
+        movq %rsp, %rbp
+        
+        # Busca e Retorna BRK
+        movq $0 , %rdi
+        movq $12, %rax
+        syscall
+
+        popq %rbp
+        ret
 
     setup_brk:
         pushq %rbp
@@ -20,7 +34,7 @@
         movq $12, %rax
         syscall
 
-        # brk_original = brk_current = BRK
+        # brk_original e brk_current recebem o valor de BRK
         lea brk_original(%rip), %rcx
         movq %rax, (%rcx)
         movq %rax, 8(%rcx) 
@@ -53,17 +67,16 @@
         lea brk_original(%rip), %rcx
         movq (%rcx), %rdx
 
-        # Verifica se brk <= posição atual da heap
+        # Verifica se brk > indice atual da heap (%rdx)
         _loop:
         cmpq %rdx, 8(%rcx)
-        jg _valid_position
-        # Se sim
-            # atualiza brk_current = brk_currentK + (bytes+16)
+        jg _before_brk
 
+            # atualiza brk_current += (bytes+16)
             lea brk_current(%rip), %rax
-            # dá pra otimizar
-            addq $16, (%rax)
-            addq %rdi, (%rax)
+            movq $16,  %rcx
+            addq %rdi, %rcx
+            addq %rcx, (%rax)
 
             # Salva valor de bytes
             pushq %rdi
@@ -80,71 +93,57 @@
             movq $1, (%rdx)
             movq %rdi, 8(%rdx)
   
-            # FIM
             jmp _end
 
-        # Se não
-        _valid_position:
-        # Verifica se o espaço esta livre
+        _before_brk:
+        # Verifica se o espaço esta ocupado
         cmpq $0, (%rdx)
-        je _livre
-        # Se não está livre
-            # rdx aponta pro proximo
-            addq $16, %rdx
-            addq -8(%rdx), %rdx
+        jne _next_space
             
-            # Repete
-            jmp _loop
+            # Mapeia tamanho do indice atual
+            movq 8(%rdx), %rcx
+            
+            # Verifica tamanho do espaço
+            cmp %rcx, %rdi
+            jg _next_space
 
-        # Se está livre
-        _livre:
-        # Verifica tamanho
-            cmp 8(%rdx), %rdi
-            jg _insuficiente
-            # Se tamanho é suficiente
+                # Coloca flag como ocupada
+                movq $1, (%rdx)
 
-                # Calcula quanto espaço esta sobrando - 16
-                movq 8(%rdx), %rcx
+                # Calcula quanto espaço esta desocupado e diminui o custo do registro
                 subq %rdi, %rcx
                 subq $16, %rcx
 
-                # Verifica se espaço em sobra permite outro registro
+                # Verifica se espaço que sobra permite um novo registro
                 cmp $0, %rcx
-                jle _no_space
-                    # Se sobra o suficiente
+                jle _end
 
-                        # Modifica o valor do tamanho do atual
-                        movq %rdi, 8(%rdx)
+                    # Modifica o valor do tamanho do atual
+                    movq %rdi, 8(%rdx)
                     
-                        # Move rdx para o novo registro
-                        addq $16 ,%rdx
-                        addq %rdi ,%rdx
+                    # Move indice para o novo registro
+                    addq $16 ,%rdx
+                    addq %rdi ,%rdx
+                    
+                    # Monta o novo registro
+                    movq $0, (%rdx)
+                    movq %rcx, 8(%rdx)
+                    
+                    # Volta o indice para o registro original
+                    subq $16, %rdx
+                    subq %rdi, %rdx
 
-                        # Cria o registro do proximo
-                        movq $0, (%rdx)
-                        movq %rcx, 8(%rdx)
-
-                        # Volta para o registro alocado
-                        subq $16, %rdx
-                        subq %rdi, %rdx
-                        
-                    _no_space:
-                    # Colocando flag como ocupada
-                    movq $1, (%rdx)
                     jmp _end
-            # Se tamanho não é suficiente
-            _insuficiente:
-
-                # rdx aponta pro proximo
-                addq $16, %rdx
-                addq -8(%rdx), %rdx
-            
-                # Repete
-                jmp _loop
+        
+        _next_space:
+        # Move o indice para o proximo registro da Heap
+        addq $16, %rdx
+        addq -8(%rdx), %rdx
+    
+        jmp _loop
 
         _end:
-
-        # Retorna posição da area alocada 
+        # Retorna a area alocada do indice atual
         addq $16, %rdx
         movq %rdx, %rax
         
@@ -156,7 +155,8 @@
         movq %rsp, %rbp
 
         # Marca flag como livre
-        movq $1, -16(%rdi)
+        movq $0, -16(%rdi)
+        # Retorna a area alocada do indice atual
 
         popq %rbp
         ret
