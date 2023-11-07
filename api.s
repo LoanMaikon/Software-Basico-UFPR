@@ -154,9 +154,29 @@
         pushq %rbp
         movq %rsp, %rbp
 
-        # Marca flag como livre
-        movq $0, -16(%rdi)
-        # Retorna a area alocada do indice atual
+        # Diminui 16 do ponteiro passado, que é o valor para cair no registro
+        subq $16, %rdi
 
+        # Prepara o retorno caso a flag não seja modificada
+        movq  $0, %rax
+
+        # Verifica se a posição está depois ou no brk_original
+        lea brk_original(%rip), %rcx
+        movq (%rcx), %rdx
+        cmpq %rdx, %rdi
+        jl _out_of_heap
+            # Verifica se o ponteiro passado está antes do brk_atual-17 (Valor minimo para ter uma flag )
+            lea brk_current(%rip), %rcx
+            movq (%rcx), %rdx
+            subq $17, %rdx
+            cmpq %rdx, %rdi
+            jg _out_of_heap
+                # Marca flag como livre
+                movq $0, (%rdi)
+                movq  $1, %rax
+
+        # Retorna a area alocada do indice atual
+        _out_of_heap:
         popq %rbp
         ret
+        

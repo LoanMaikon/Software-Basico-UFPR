@@ -9,7 +9,7 @@ void* get_brk();
 void setup_brk();
 void dismiss_brk();
 void* memory_alloc(unsigned long int bytes);
-void memory_free(void *pointer);
+int memory_free(void *pointer);
 
 /* Funções de apresentação  */
 void show_global(){
@@ -37,7 +37,8 @@ void teste_setup_brk(){
 
 void teste_memory_alloc(){
     char *str_0, *str_1, *str_2, *str_3,*str_4;
-
+    
+    /*
     header("Inserindo primeiro elemento na heap");
     msg("Inserindo registro");
     str_0 = memory_alloc( 5 * sizeof(char));
@@ -57,22 +58,24 @@ void teste_memory_alloc(){
     str_1[3] = '\0';
     printf("%s\n",str_1);
     show_global();
+    */
 
     header("Teste de reaproveitamento de memoria, sem novo registro");
-    msg("Alocando elemento");
-    str_2 = memory_alloc( 40 * sizeof(char));
-    printf("!! Elemento na posição : %p\n", str_2);
     show_global();
-    msg("memory_free()");
-    memory_free(str_2);
-    msg("Alocando elemento de mesmo tamanho");
-    str_3 = memory_alloc( 40 * sizeof(char));
-    printf("!! Elemento na posição : %p\n", str_3);
+    msg("Alocando e desalocando elementos");
+    int *v;
+    for(int i = 0; i < 100; i++){
+        v = memory_alloc(sizeof(int)*5);
+        memory_free(v);
+
+    }
+
     show_global();
 
     header("Teste de reaproveitamento de memoria, com novo registro");
     msg("Alocando elemento");
-    str_2 = memory_alloc( 40 * sizeof(char));
+    str_2 = memory_alloc(sizeof(char)*40);
+
     printf("!! Elemento na posição : %p\n", str_2);
     show_global();
     msg("memory_free()");
@@ -97,7 +100,18 @@ void teste_memory_free(){
     memory_free(str);
     int flag_2 = (int)(str[-16]);
     printf("!! Flag de ocupação do elemento : %i\n",flag_2);
+
+    header("Teste de posição invalida");
+    printf("!! Resposta de desalocação invalida: %i\n", memory_free(&brk_current) );
+    printf("!! Resposta de desalocação invalida em posição MIN: %i\n", memory_free(brk_original+15) );
+    printf("!! Resposta de desalocação invalida em posição MAX: %i\n", memory_free(brk_current) );
+    printf("!! Resposta de desalocação valida em posição MAX: %i\n", memory_free(brk_current-1) );
+    printf("!! Resposta de desalocação valida em posição MIN: %i\n", memory_free(brk_original+16) );
+
+
 }
+
+
 
 void teste_dismiss_brk(){
     header("Testando dismiss_brk");
