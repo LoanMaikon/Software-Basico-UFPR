@@ -3,14 +3,14 @@ AS=as
 LD=ld
 LFLAG=-g 
 
-all: teste
+all: teste2
 
-teste:  teste.c api.s
-	$(GCC)  teste.c api.s -o teste
+teste2:  teste2.c api.s
+	$(GCC) -g teste2.c api.s -o teste2
 
 
 clean: 
 	rm -f *.o
 
 purge: clean 
-	rm -f  teste
+	rm -f  teste2

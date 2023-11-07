@@ -69,6 +69,7 @@
 
         # Verifica se brk > indice atual da heap (%rdx)
         _loop:
+        lea brk_original(%rip), %rcx # AQUI THIAGÃO IUBFUIEWFBEWFBIUEWBFUIEWBUIFEWUIFIEWBFWEIFUEW
         cmpq %rdx, 8(%rcx)
         jg _before_brk
 
