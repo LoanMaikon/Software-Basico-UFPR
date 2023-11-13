@@ -63,13 +63,25 @@
         pushq %rbp
         movq %rsp, %rbp
 
+
+        # Verifica se o espaço alocado é maior que 0
+        cmp $0, %rdi
+        jg _continue
+        
+            # Retorna 0
+            movq $0, %rax
+            popq %rbp
+            ret
+        
+        _continue:
+
+
         # Posição inicial da heap
         lea brk_original(%rip), %rcx
         movq (%rcx), %rdx
 
         # Verifica se brk > indice atual da heap (%rdx)
         _loop:
-        lea brk_original(%rip), %rcx # AQUI THIAGÃO IUBFUIEWFBEWFBIUEWBFUIEWBUIFEWUIFIEWBFWEIFUEW
         cmpq %rdx, 8(%rcx)
         jg _before_brk
 
@@ -102,21 +114,21 @@
         jne _next_space
             
             # Mapeia tamanho do indice atual
-            movq 8(%rdx), %rcx
+            movq 8(%rdx), %r8
             
             # Verifica tamanho do espaço
-            cmp %rcx, %rdi
+            cmp %r8, %rdi
             jg _next_space
 
                 # Coloca flag como ocupada
                 movq $1, (%rdx)
 
                 # Calcula quanto espaço esta desocupado e diminui o custo do registro
-                subq %rdi, %rcx
-                subq $16, %rcx
+                subq %rdi, %r8
+                subq $16, %r8
 
                 # Verifica se espaço que sobra permite um novo registro
-                cmp $0, %rcx
+                cmp $0, %r8
                 jle _end
 
                     # Modifica o valor do tamanho do atual
@@ -128,7 +140,7 @@
                     
                     # Monta o novo registro
                     movq $0, (%rdx)
-                    movq %rcx, 8(%rdx)
+                    movq %r8, 8(%rdx)
                     
                     # Volta o indice para o registro original
                     subq $16, %rdx

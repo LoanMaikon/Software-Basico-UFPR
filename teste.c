@@ -38,7 +38,6 @@ void teste_setup_brk(){
 void teste_memory_alloc(){
     char *str_0, *str_1, *str_2, *str_3,*str_4;
     
-    /*
     header("Inserindo primeiro elemento na heap");
     msg("Inserindo registro");
     str_0 = memory_alloc( 5 * sizeof(char));
@@ -58,16 +57,18 @@ void teste_memory_alloc(){
     str_1[3] = '\0';
     printf("%s\n",str_1);
     show_global();
-    */
+
+    header("Teste de alocamento de memoria de tamanho invalido");
+    printf("!! Retorno memory_alloc 0 : %p\n",memory_alloc(0));
+    printf("!! Retorno memory_alloc -2 : %p\n",memory_alloc(-2));
 
     header("Teste de reaproveitamento de memoria, sem novo registro");
     show_global();
     msg("Alocando e desalocando elementos");
     int *v;
     for(int i = 0; i < 100; i++){
-        v = memory_alloc(sizeof(int)*5);
+        v = memory_alloc(sizeof(int)*40);
         memory_free(v);
-
     }
 
     show_global();
@@ -107,6 +108,7 @@ void teste_memory_free(){
     printf("!! Resposta de desalocação invalida em posição MAX: %i\n", memory_free(brk_current) );
     printf("!! Resposta de desalocação valida em posição MAX: %i\n", memory_free(brk_current-1) );
     printf("!! Resposta de desalocação valida em posição MIN: %i\n", memory_free(brk_original+16) );
+    
 
 
 }
@@ -122,6 +124,7 @@ void teste_dismiss_brk(){
 }
 
 int main(){
+    printf("============================= Testes =====================================\n");
     teste_setup_brk();
     teste_memory_alloc();
     teste_memory_free();
