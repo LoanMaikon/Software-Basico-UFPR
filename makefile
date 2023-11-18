@@ -2,21 +2,21 @@ GCC=gcc
 AS=as
 LD=ld
 LFLAG=-g 
+EXEC=teste2
 
-all: teste2 teste
+all: $(EXEC)
 
-teste2:  teste2.c api.o
-	$(GCC) teste2.c api.o -o teste2
+$(EXEC):  $(EXEC).o api.o
+	$(GCC)  $(EXEC).o api.o -o $(EXEC)
 
-teste:  teste.c api.o
-	$(GCC)  teste.c api.o -o teste
+$(EXEC).o: $(EXEC).c 
+	$(GCC) -c $(EXEC).c -o $(EXEC).o
 
-api.o: api.s
+api.o: api.s api.h
 	$(AS) api.s -o api.o
-
 
 clean: 
 	rm -f *.o
 
 purge: clean 
-	rm -f  teste2
+	rm -f  $(EXEC)

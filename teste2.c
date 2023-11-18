@@ -1,15 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>						
+#include "api.h"
 
-extern void* brk_original;
-extern void* brk_current;
-
-/* Funções Assembly */
-void* get_brk();
-void setup_brk();
-void dismiss_brk();
-void* memory_alloc(unsigned long int bytes);
-int memory_free(void *pointer);
 
 void double_alloc_after_free(void **pointers_array){
 	pointers_array[1] = memory_alloc(50);

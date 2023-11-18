@@ -129,7 +129,7 @@
 
                 # Verifica se espaço que sobra permite um novo registro
                 cmp $0, %r8
-                jle _end
+                jl _end
 
                     # Modifica o valor do tamanho do atual
                     movq %rdi, 8(%rdx)
