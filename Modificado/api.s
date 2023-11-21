@@ -82,7 +82,7 @@
 
         # O endereco de worst fit fica em %r10, mas ele não precisa ser iniciado
         # inicia o valor atual do tamanho extra do worst fit em %r9
-        movq $0, %r9
+        movq $-1, %r9
 
         # Verifica se brk <= indice atual da heap (%rdx)
         _loop:
@@ -104,7 +104,7 @@
 
                     # Verifica se espaço desocupado maior que do worst fit atual (%r9)
                     cmp %r8, %r9
-                    jge _next_space
+                    jg _next_space
 
                         # tamanho do worst fit = tamanho do indice
                         movq %r8, %r9
@@ -122,31 +122,31 @@
         _end_loop:
 
         # Verifica se havia um worst fit valido 
-        cmp $0, %r9
+        cmp $-1, %r9
         je _no_fit
 
             # Atualiza flag de worst_atual para 1
+            movq $1, (%r10)
 
             # Calcula quanto espaço esta desocupado e diminui o custo do registro
             subq $16, %r9
 
+            # Preparar para retorno
+            movq %r10, %rdx
+
             # Verifica se espaço que sobra permite um novo registro
-            cmp $0, %r8
-            jl _end
+            cmp $0, %r9
+            jle _end
                 # Modifica o valor do tamanho do atual
-                movq %rdi, 8(%rdx)
+                movq %rdi, 8(%r10)
 
                 # Move indice para o novo registro
-                addq $16 ,%rdx
-                addq %rdi ,%rdx
+                addq $16 ,%r10
+                addq %rdi ,%r10
 
                 # Monta o novo registro
-                movq $0, (%rdx)
-                movq %r9, 8(%rdx)
-
-                # Volta o indice para o registro original
-                subq $16, %rdx
-                subq %rdi, %rd
+                movq $0, (%r10)
+                movq %r9, 8(%r10)
 
                 jmp _end
 
